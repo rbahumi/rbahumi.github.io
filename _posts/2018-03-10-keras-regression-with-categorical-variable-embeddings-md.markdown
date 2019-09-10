@@ -3,6 +3,7 @@ layout: post
 title:  "Keras - Regression with categorical variable embeddings"
 date:   2018-03-10 00:07:15 +0200
 categories: Keras
+comments: true
 ---
 
 <style>
@@ -17,3 +18,6 @@ categories: Keras
 
 {% include keras-regression-with-categorical-variable-embeddings.html %}
 
+{% if page.comments %}
+    {% include disqus.html %}
+{% endif %}

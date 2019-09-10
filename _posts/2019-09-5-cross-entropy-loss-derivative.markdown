@@ -1,5 +1,6 @@
 ---
 layout: post
+comments: true
 title:  "Deep Learning - Cross Entropy Loss Derivative"
 date:   2019-09-05 00:07:15 +0200
 categories: "deep_learning"
@@ -16,5 +17,11 @@ categories: "deep_learning"
 
 {% include notebook_imports.html %}
 <link rel="stylesheet" href="{{ site.baseurl }}/css/my.css">
+<link rel="canonical" href="{{ site.production_url }}{{ post.url | replace:'index.html',''}}">
 
 {% include cross_entropy_loss_derivative.html %}
+
+
+{% if page.comments %}
+    {% include disqus.html %}
+{% endif %}
