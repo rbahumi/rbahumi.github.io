@@ -13186,7 +13186,7 @@ There are also some key differences in PG methods:</p>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><img src="images/pg/pg_policy_ann.jpg" alt="Policy Network" style="width:800px;"/></p>
+<p><img src="/assets/images/pg/pg_policy_ann.jpg" alt="Policy Network" style="width:800px;"/></p>
 <p>*Figure 1: An example of a basic policy network $\pi$ parameterized by $\theta$ ($\theta$ represents the weights of the network). This network gets a state $s\in R^3$ as input and maps it to a probability distribution over actions $a\in R^5$.</p>
 
 </div>
@@ -13256,7 +13256,7 @@ $$
                q_j \hspace{10pt} \forall j\neq y_i\\
             \end{cases}
 $$<p>where each $q_j$ represent the model approximation of the probability $p(y=j|X_i)$. Note that the gradient for the true label's logit is non-positive (as expected) and decreases proportionally in magnitude as $q_{y_i}$ increases. The rest of the logits gradients ($q_j \hspace{5pt} \forall j\neq y_i$) will be non-negative and increase proportionally as $q_j$ increases. In the specific case of perfect classification where $q_{y_i}=1$, the gradient will be $\vec{0}$ and thus none of the network's parameters will be modified. Figure 2 below shows the forward and backward passes of backpropagation of a single training example when $k=3$.</p>
-<p><img src="images/pg/back_propagation_single_label.jpg" alt="Policy Network" style="width:600px;"/></p>
+<p><img src="/assets/images/pg/back_propagation_single_label.jpg" alt="Policy Network" style="width:600px;"/></p>
 <p>*Figure 2: This example shows the end layers of a basic classifier for a classification task with $k=3$ when classifying a single sample with label $y=1$.
 The top image demonstrates the forward pass of the backpropagation in which the softmax outputs a probability distribution $(q_1, q_2, q_3)$ over the 3 classes. The bottom image demonstrates the backward pass of backpropagation in which the gradients out of the softmax are shown. Note that this gradient is different for the true label ($y=1$) than the rest of the labels.</p>
 <p>The cross-entropy loss function for the classification task with a single training example is $-log(q_{y_i})$. Increasing the probability of the true label's class $q_{y_i}$ will decrease the loss, and increasing the probability of each of the incorrect classes will increase the loss.
