@@ -1,9 +1,9 @@
 ---
 layout: post
 comments: true
-title:  "Reinforcement Learning - Policy Gradient from a gradient perspectivet"
+title:  "Reinforcement Learning - A mathematical introduction to Policy Gradient"
 date:   2019-12-06 12:07:15 +0200
-categories: "deep_learning"
+categories: ["deep_learning", "reinforcement_learning"]
 ---
 
 <style>
