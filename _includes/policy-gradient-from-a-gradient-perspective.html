@@ -13092,7 +13092,34 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Relevant-RL-concepts">Relevant RL concepts<a class="anchor-link" href="#Relevant-RL-concepts">&#182;</a></h2><ul>
+<h1 id="Table-of-contents-">Table of contents <a class="anchor" id="table_of_contents" /><a class="anchor-link" href="#Table-of-contents-">&#182;</a></h1><ol>
+<li><a href="#bullet_1">Relevant RL concepts</a></li>
+<li><a href="#bullet_2">Policy Gradient methods VS Supervised Learning</a></li>
+<li><a href="#bullet_3">Introduction to Policy Gradient</a><br>
+3.1 <a href="#bullet_3.1">Training procedure</a><br>
+3.2 <a href="#bullet_3.2">Objective function</a><br>
+3.3 <a href="#bullet_3.3">Policy $\pi_{\theta}(a|s)$</a><br>
+3.4 <a href="#bullet_3.4">Gradient</a><br>
+3.5 <a href="#bullet_3.5">PG gradient VS Supervised Learning classification gradient</a><br>
+3.6 <a href="#bullet_3.6">Classification task gradient flow</a><br>
+3.7 <a href="#bullet_3.7">Discrete action gradient flow</a><br>
+3.8 <a href="#bullet_3.8">The REINFORCE algorithm</a>  </li>
+<li><a href="#bullet_4">Variance reduction methods</a><br>
+4.1 <a href="#bullet_4.1">Reward To Go</a><br>
+4.2 <a href="#bullet_4.2">Discount rate</a><br>
+4.3 <a href="#bullet_4.3">Advantage</a>  </li>
+<li><a href="#bullet_5">Actor-Critic Algorithm</a></li>
+<li><a href="#bullet_6">Advantages of Policy Gradient over action-value methods</a></li>
+<li><a href="#bullet_7">Summary</a></li>
+</ol>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Relevant-RL-concepts-">Relevant RL concepts <a class="anchor" id="bullet_1" /><a class="anchor-link" href="#Relevant-RL-concepts-">&#182;</a></h2><ul>
 <li><strong>Policy</strong>: a mapping from states to action probabilities. Following a policy $\pi$ means that at each timestep $t$ when beeing at state $s_t$ we select an action $a$ with probability $\pi(a|s_t)$. The notation $\pi^*$ represents the optimal policy for a task, which is the policy that yields the highest expected reward.</li>
 <li><strong>Value function</strong>: a function that estimates the expected future reward.</li>
 <li><strong>State-Value ($V$) function</strong>: $\hat{v}_\pi(s)$ is a value function that estimates $v_\pi(s)$, the expected reward starting at a state $s$ and following policy $\pi$ onwards. The notation $v_{\pi^*}(s)$ represent the true state-value for the optimal policy $\pi^*$. </li>
@@ -13125,7 +13152,7 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Policy-Gradient-VS-Supervised-Learning">Policy Gradient VS Supervised Learning<a class="anchor-link" href="#Policy-Gradient-VS-Supervised-Learning">&#182;</a></h2><p>PG methods are similar to DL methods for supervised learning problems in the sense that they both try to fit a neural network to approximate some function by learning an approximation of its gradient using a Stochastic Gradient Descent (SGD) method and then using this gradient to update the network parameters.
+<h2 id="Policy-Gradient-methods-VS-Supervised-Learning-">Policy Gradient methods VS Supervised Learning <a class="anchor" id="bullet_2" /><a class="anchor-link" href="#Policy-Gradient-methods-VS-Supervised-Learning-">&#182;</a></h2><p>PG methods are similar to DL methods for supervised learning problems in the sense that they both try to fit a neural network to approximate some function by learning an approximation of its gradient using a Stochastic Gradient Descent (SGD) method and then using this gradient to update the network parameters.
 There are also some key differences in PG methods:</p>
 <ul>
 <li>There are no static targets labeled by an expert. The reward signal is used as a way of measuring the "goodness" of the performance. </li>
@@ -13139,14 +13166,7 @@ There are also some key differences in PG methods:</p>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Policy-Gradient-Algorithms">Policy Gradient Algorithms<a class="anchor-link" href="#Policy-Gradient-Algorithms">&#182;</a></h2>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Training-procedure">Training procedure<a class="anchor-link" href="#Training-procedure">&#182;</a></h3><p>In RL we assume that the environment dynamics are an unknown probability function $p(s_{t+1}|s_t, a_t)$ that defines the probability to arrive at state $s_{t+1}$ at time $t+1$ after being at state $s_t$ at time $t$ and applying action $a_t$. Because PG is a model-free RL method, there isn't a model for the environment dynamics at hand, and we have to sample the environment. Meaning, at each timestep $t$, sample an action $a_t$ from the policy, apply it, and record the reward $r_t$ and the new state $s_{t+1}$.</p>
+<h2 id="Introduction-to-Policy-Gradient-">Introduction to Policy Gradient <a class="anchor" id="bullet_3" /><a class="anchor-link" href="#Introduction-to-Policy-Gradient-">&#182;</a></h2><h3 id="Training-procedure-">Training procedure <a class="anchor" id="bullet_3.1" /><a class="anchor-link" href="#Training-procedure-">&#182;</a></h3><p>In RL we assume that the environment dynamics are an unknown probability function $p(s_{t+1}|s_t, a_t)$ that defines the probability to arrive at state $s_{t+1}$ at time $t+1$ after being at state $s_t$ at time $t$ and applying action $a_t$. Because PG is a model-free RL method, there isn't a model for the environment dynamics at hand, and we have to sample the environment. Meaning, at each timestep $t$, sample an action $a_t$ from the policy, apply it, and record the reward $r_t$ and the new state $s_{t+1}$.</p>
 <p>Like in supervised learning, we first initialize the policy network parameters $\theta$ arbitrarily and then train the policy network iteratively. Unlike with supervised learning, there aren't fix target labels available. Instead, we derive an estimation of the gradient with respect to the actions we sampled from policy, multiply it by a function of the observed rewards and update the network parameters. We will first consider the REINFORCE algorithm (vanilla PG) which is a Monte Carlo method, meaning we only update the policy parameters at the end of the episode. Later we will introduce the Actor-Critic algorithm, which is a TD method that bootstraps using a value function.</p>
 
 </div>
@@ -13155,7 +13175,7 @@ There are also some key differences in PG methods:</p>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Objective-function">Objective function<a class="anchor-link" href="#Objective-function">&#182;</a></h3><p>RL Policy Gradient (PG) methods are model-free methods that try to maximize the RL objective directly without requiring a value function. Although value functions can be used as a baseline for variance reduction, or in order to evaluate current and successor state’s value (Actor-Critic), it is not required for the purpose of action selection. The RL objective or the performance measure $J(\theta)$ is defined as the sum of rewards from the initial state to a terminal state for the episodic task, and the average return for the continuing task when following policy $\pi_{\theta}$.</p>
+<h3 id="Objective-function-">Objective function <a class="anchor" id="bullet_3.2" /><a class="anchor-link" href="#Objective-function-">&#182;</a></h3><p>RL Policy Gradient (PG) methods are model-free methods that try to maximize the RL objective directly without requiring a value function. Although value functions can be used as a baseline for variance reduction, or in order to evaluate current and successor state’s value (Actor-Critic), it is not required for the purpose of action selection. The RL objective or the performance measure $J(\theta)$ is defined as the sum of rewards from the initial state to a terminal state for the episodic task, and the average return for the continuing task when following policy $\pi_{\theta}$.</p>
 <h4 id="Episodic-task">Episodic task<a class="anchor-link" href="#Episodic-task">&#182;</a></h4><p>For the episodic task this objective is:</p>
 <p>$J(\theta) \doteq v_{\pi_{\theta}}(s_{0}) = E_{\tau \sim \pi_{\theta}(\tau)}[\gamma^{t} r(s_t,a_t)]$</p>
 <p>Where this value function $v_{\pi_{\theta}}(s_{0})$ is the value of the expected discounted sum of rewards for a trajectory starting at state $s_0$ and following policy $\pi_{\theta}$ until the episode terminates. This objective can be unbiasly evaluated by sampling N trajectories from the environment using policy $\pi_{\theta}$:</p>
@@ -13171,7 +13191,7 @@ There are also some key differences in PG methods:</p>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Policy-$\pi_{\theta}(a|s)$">Policy $\pi_{\theta}(a|s)$<a class="anchor-link" href="#Policy-$\pi_{\theta}(a|s)$">&#182;</a></h3>
+<h3 id="Policy-$\pi_{\theta}(a|s)$-">Policy $\pi_{\theta}(a|s)$ <a class="anchor" id="bullet_3.3" /><a class="anchor-link" href="#Policy-$\pi_{\theta}(a|s)$-">&#182;</a></h3>
 </div>
 </div>
 </div>
@@ -13187,7 +13207,7 @@ There are also some key differences in PG methods:</p>
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p><img src="/assets/images/pg/pg_policy_ann.jpg" alt="Policy Network" style="width:800px;"/></p>
-<p>*Figure 1: An example of a basic policy network $\pi$ parameterized by $\theta$ ($\theta$ represents the weights of the network). This network gets a state $s\in R^3$ as input and maps it to a probability distribution over actions $a\in R^5$.</p>
+<p><em>Figure 1: An example of a basic policy network $\pi$ parameterized by $\theta$ ($\theta$ represents the weights of the network). This network gets a state $s\in R^3$ as input and maps it to a probability distribution over actions $a\in R^5$.</em></p>
 
 </div>
 </div>
@@ -13207,7 +13227,7 @@ There are also some key differences in PG methods:</p>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Gradient">Gradient<a class="anchor-link" href="#Gradient">&#182;</a></h3><p>The gradient with respect to $\theta$ according to the Policy Gradient Theorem can be approximated over N trajectories as:</p>
+<h3 id="Gradient-">Gradient <a class="anchor" id="bullet_3.4" /><a class="anchor-link" href="#Gradient-">&#182;</a></h3><p>The gradient with respect to $\theta$ according to the Policy Gradient Theorem can be approximated over N trajectories as:</p>
 <p>$\nabla_{\theta} J(\theta) \approx \frac{1}{N}\sum_{i=1}^{N}\left( \sum_{t=0}^{T_{i}-1} G_{i,t} \nabla_{\theta} log \pi_{\theta}(a_{i,t}|s_{i,t}) \right)$</p>
 <p>where $a_{i,t}$ is the <strong>action taken</strong> at time $t$ of episode $i$ at state $s_{i,t}$, $T_{i}$ is the timestep in which trajectory $\tau_{i}$ terminates and $G_{i,t}$ is a function of the reward assigned to this action. In vanilla PG settings (REINFORCE algorithm) $G_{i,t}$ is just trajectory $i$'s sum of rewards:</p>
 <p>$G_{i,t} = \sum_{t'=0}^{T_{i}-1} r(s_{i,t'}, a_{i, t'})$</p>
@@ -13219,7 +13239,7 @@ There are also some key differences in PG methods:</p>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="PG-gradient-VS-supervised-learning-gradient">PG gradient VS supervised learning gradient<a class="anchor-link" href="#PG-gradient-VS-supervised-learning-gradient">&#182;</a></h3><p>In order to gain some intuition regarding this gradient expression, let’s consider the discrete action case in which each episode has a length of $1$, and compare it to a supervised learning classification task. We assume both networks are using a softmax function to normalize the logits to a probability distribution. If you are not familiar with the Cross-Entropy Loss, I recommend reading my previous blog post <a href="http://machinelearningmechanic.com/deep_learning/2019/09/04/cross-entropy-loss-derivative.html">cross entropy loss derivative</a> before continuing.</p>
+<h3 id="PG-gradient-VS-Supervised-Learning-classification-gradient-">PG gradient VS Supervised Learning classification gradient <a class="anchor" id="bullet_3.5" /><a class="anchor-link" href="#PG-gradient-VS-Supervised-Learning-classification-gradient-">&#182;</a></h3><p>In order to gain some intuition regarding this gradient expression, let’s consider the discrete action case in which each episode has a length of $1$, and compare it to a supervised learning classification task. We assume both networks are using a softmax function to normalize the logits to a probability distribution. If you are not familiar with the Cross-Entropy Loss, I recommend reading my previous blog post <a href="http://machinelearningmechanic.com/deep_learning/2019/09/04/cross-entropy-loss-derivative.html">cross entropy loss derivative</a> before continuing.</p>
 <p>In a supervised learning classification task, for each training example $X_i$ we are given a true label $y_i$. The network output $p_{\theta}(y_i|X_i)$ is a distribution over all possible labels just like $\pi_{\theta}(a_{t}|s_{t})$ is a distribution over all possible actions. If we consider the contribution of a single training example $X_i$ (e.g. a single image in a classification task) to the gradient, the objecive is to maximize the log-likelihood $log p_{\theta}(y_i|X_i)$ which is like trying to minimize the cross entropy loss $-log p_{\theta}(y_i|X_i)$. The gradient of this minimization problem is $\nabla_{\theta} -log p_{\theta}(y_i|X_i)$ and the parameters update is:</p>
 <p>$\theta_{i+1} = \theta_{i} - \alpha \nabla_{\theta} -log p_{\theta}(y_i|X_i)$</p>
 <p>where $\alpha$ is the learning rate and it has a $(-)$ prefix because this is a minimization problem (therefore we are running gradient descent).</p>
@@ -13245,7 +13265,7 @@ In the case of non-negative rewards, we can view the PG gradient as a weighted C
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Classification-task-gradient-flow">Classification task gradient flow<a class="anchor-link" href="#Classification-task-gradient-flow">&#182;</a></h3><p>In a regular supervised learning classification task, we are given a true target label that determines the gradient for each sample. Let's zoom-in only on the last few layers of the network, from the logits layer onward. Assume we have a classification task with $k$ classes and $q\in R^k$ is the softmax layer's output which implies that $q$ is a probability distribution over $k$ classes and therefore satisfies:</p>
+<h3 id="Classification-task-gradient-flow-">Classification task gradient flow <a class="anchor" id="bullet_3.6" /><a class="anchor-link" href="#Classification-task-gradient-flow-">&#182;</a></h3><p>In a regular supervised learning classification task, we are given a true target label that determines the gradient for each sample. Let's zoom-in only on the last few layers of the network, from the logits layer onward. Assume we have a classification task with $k$ classes and $q\in R^k$ is the softmax layer's output which implies that $q$ is a probability distribution over $k$ classes and therefore satisfies:</p>
 \begin{align*}
     &amp; 0 \leq q_j \leq 1 \hspace{10pt} \forall j \in \{1,..k\} \\
     &amp; and \hspace{10pt} \sum_{j \in \{1,..k\}} q_j=1
@@ -13257,8 +13277,8 @@ $$
             \end{cases}
 $$<p>where each $q_j$ represent the model approximation of the probability $p(y=j|X_i)$. Note that the gradient for the true label's logit is non-positive (as expected) and decreases proportionally in magnitude as $q_{y_i}$ increases. The rest of the logits gradients ($q_j \hspace{5pt} \forall j\neq y_i$) will be non-negative and increase proportionally as $q_j$ increases. In the specific case of perfect classification where $q_{y_i}=1$, the gradient will be $\vec{0}$ and thus none of the network's parameters will be modified. Figure 2 below shows the forward and backward passes of backpropagation of a single training example when $k=3$.</p>
 <p><img src="/assets/images/pg/back_propagation_single_label.jpg" alt="Policy Network" style="width:600px;"/></p>
-<p>*Figure 2: This example shows the end layers of a basic classifier for a classification task with $k=3$ when classifying a single sample with label $y=1$.
-The top image demonstrates the forward pass of the backpropagation in which the softmax outputs a probability distribution $(q_1, q_2, q_3)$ over the 3 classes. The bottom image demonstrates the backward pass of backpropagation in which the gradients out of the softmax are shown. Note that this gradient is different for the true label ($y=1$) than the rest of the labels.</p>
+<p><em>Figure 2: This example shows the end layers of a basic classifier for a classification task with $k=3$ when classifying a single sample with label $y=1$.
+The top image demonstrates the forward pass of the backpropagation in which the softmax outputs a probability distribution $(q_1, q_2, q_3)$ over the 3 classes. The bottom image demonstrates the backward pass of backpropagation in which the gradients out of the softmax are shown. Note that this gradient is different for the true label ($y=1$) than the rest of the labels.</em></p>
 <p>The cross-entropy loss function for the classification task with a single training example is $-log(q_{y_i})$. Increasing the probability of the true label's class $q_{y_i}$ will decrease the loss, and increasing the probability of each of the incorrect classes will increase the loss.
 Because gradients are directed towards the maximal value increase of their function, when running gradient descent we will update the network parameters in the counter direction to the gradient in order to minimize the loss.
 As a result, the network will try to move all the probability mass towards the correct class, which will reduce the current training loss, and (hopefully) generalize and improve the classification of new unseen inputs.</p>
@@ -13269,14 +13289,7 @@ As a result, the network will try to move all the probability mass towards the c
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Discrete-action-gradient-flow">Discrete action gradient flow<a class="anchor-link" href="#Discrete-action-gradient-flow">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>The applied actions in PG methods are not the true/optimal actions to be taken. We just used actions sampled from the policy and hoped for the best. 
+<h3 id="Discrete-action-gradient-flow-">Discrete action gradient flow <a class="anchor" id="bullet_3.7" /><a class="anchor-link" href="#Discrete-action-gradient-flow-">&#182;</a></h3><p>The applied actions in PG methods are not the true/optimal actions to be taken. We just used actions sampled from the policy and hoped for the best. 
 We saw earlier that in the case of discrete action space, the PG gradient can be viewed as a weighted cross-entropy loss gradient for which the weights are determined by the reward magnitude, except that the reward sign can flip the direction of the gradient which can be interpreted as allowing negative weights.</p>
 <p>To make this explanation simple, I'll make a number of assumptions:</p>
 <ul>
@@ -13294,7 +13307,7 @@ We saw earlier that in the case of discrete action space, the PG gradient can be
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h4 id="The-REINFORCE-algorithm">The REINFORCE algorithm<a class="anchor-link" href="#The-REINFORCE-algorithm">&#182;</a></h4><p>So far we have considered the REINFORCE algorithm. This is the basic PG algorithm in which the reward function $G_{i,t}$ for trajectory $\tau_i$ at time $t$ is defined as the total sum of rewards of the episode:</p>
+<h3 id="The-REINFORCE-algorithm-">The REINFORCE algorithm <a class="anchor" id="bullet_3.8" /><a class="anchor-link" href="#The-REINFORCE-algorithm-">&#182;</a></h3><p>So far we have considered the REINFORCE algorithm. This is the basic PG algorithm in which the reward function $G_{i,t}$ for trajectory $\tau_i$ at time $t$ is defined as the total sum of rewards of the episode:</p>
 <p>$G_{i,t} = \sum_{t'=0}^{T_{i}-1} r(s_{i,t'}, a_{i, t'})$</p>
 <p>The <strong>REINFORCE</strong> algorithm has the folowing steps:</p>
 <ol>
@@ -13313,7 +13326,7 @@ $$\theta \leftarrow \theta + \alpha \nabla_{\theta} J(\theta)$$</li>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Variance-reduction-methods">Variance reduction methods<a class="anchor-link" href="#Variance-reduction-methods">&#182;</a></h2><p>This basic REINFORCE algorithm probably won't perform very well, however there are various methods of improving it - mainly by trying to reduce its variance. Because REINFORCE is a Monte Carlo algorithm, it is unbiased but has high variance. It is unbiased because we are sampling from our current policy and interacting with the environment. The reward function is only based on the sum of rewards with no bootstrapping. Thus, if we were to run an infinite number of trajectories starting from $s_0$, the average sum of trajectory rewards will be the true value of $v_{\pi_{\theta}}(s_{0})$ which is exactly our objective $J(\theta)$.</p>
+<h2 id="Variance-reduction-methods-">Variance reduction methods <a class="anchor" id="bullet_4" /><a class="anchor-link" href="#Variance-reduction-methods-">&#182;</a></h2><p>This basic REINFORCE algorithm probably won't perform very well, however there are various methods of improving it - mainly by trying to reduce its variance. Because REINFORCE is a Monte Carlo algorithm, it is unbiased but has high variance. It is unbiased because we are sampling from our current policy and interacting with the environment. The reward function is only based on the sum of rewards with no bootstrapping. Thus, if we were to run an infinite number of trajectories starting from $s_0$, the average sum of trajectory rewards will be the true value of $v_{\pi_{\theta}}(s_{0})$ which is exactly our objective $J(\theta)$.</p>
 <p>What does it actually mean to have high variance? It means that if we try to estimate the gradient over a small number of trajectories we will probably get a different estimate every time. Why is it a bad thing? Because the gradient is very noisy and the model will take a long time to converge to a local maximum. This is especially true when dealing with nonconvex function approximators like ANNs. We also might need to reduce our learning rate as a consequence of the high variance.</p>
 
 </div>
@@ -13322,7 +13335,7 @@ $$\theta \leftarrow \theta + \alpha \nabla_{\theta} J(\theta)$$</li>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Reward-To-Go-(Causality)">Reward To Go (Causality)<a class="anchor-link" href="#Reward-To-Go-(Causality)">&#182;</a></h3><p>This variance reduction method exploits causality, as it is based on the fact that the future does not effect the past. 
+<h3 id="Reward-To-Go-(Causality)-">Reward To Go (Causality) <a class="anchor" id="bullet_4.1" /><a class="anchor-link" href="#Reward-To-Go-(Causality)-">&#182;</a></h3><p>This variance reduction method exploits causality, as it is based on the fact that the future does not effect the past. 
 The policy at time $t$ cannot effect the rewards we get until time $t$ and therefore we can define the reward $G_{i,t}$ only based on future rewards relative to $t$:</p>
 <p>$G_{i,t} = \sum_{t'=t}^{T_{i}-1} r(s_{i,t'}, a_{i, t'})$</p>
 <p>And the corresponding gradient estimate is:</p>
@@ -13337,7 +13350,7 @@ The policy at time $t$ cannot effect the rewards we get until time $t$ and there
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Discount-rate">Discount rate<a class="anchor-link" href="#Discount-rate">&#182;</a></h3><p>The use of a discount rate also reduces the variance because it puts less emphasis on rewards far into the future. 
+<h3 id="Discount-rate-">Discount rate <a class="anchor" id="bullet_4.2" /><a class="anchor-link" href="#Discount-rate-">&#182;</a></h3><p>The use of a discount rate also reduces the variance because it puts less emphasis on rewards far into the future. 
 Rewards in the far future are more likely to have high variance because in many cases the far future is more uncertain than the near future. We may choose to go in different directions and therefore arrive at various states that are very different from our current state.</p>
 <p>The discounted gradient estimate is:</p>
 <p>$\nabla_{\theta} J(\theta) \approx \frac{1}{N}\sum_{i=1}^{N} \sum_{t=0}^{T_{i}-1} \nabla_{\theta} log \pi_{\theta}(a_{i,t}|s_{i,t}) * \left( \sum_{t'=0}^{T_{i}-1} \gamma^{t'} r(s_{i,t'}, a_{i, t'}) \right)$</p>
@@ -13350,7 +13363,7 @@ Rewards in the far future are more likely to have high variance because in many 
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Advantage">Advantage<a class="anchor-link" href="#Advantage">&#182;</a></h3><p>The advantage tries to quantify how much the chosen action was better than the expected/average action.
+<h3 id="Advantage-">Advantage <a class="anchor" id="bullet_4.3" /><a class="anchor-link" href="#Advantage-">&#182;</a></h3><p>The advantage tries to quantify how much the chosen action was better than the expected/average action.
 We already saw some of the motivation for the use of advantage in the previous sections.
 Because the direction of the gradient is determined by the sum of rewards, any action that will have a positive reward function $G_{i, t}$ will cause a positive update to the policy and make the chosen action more likely. We want our policy to be robust to the absolute reward function's value, and to differentiate between actions based on their relative performance to the alternative actions. The average reward is called a Baseline.</p>
 <p>For example, let's assume that we have two actions $a_1$ and $a_2$ that yield an average reward of $100$ and $102$ respectively. Reducing a baseline of $101$ from these rewards will yield an average reward of $-1$ and $+1$ for the two actions. This simple reward transformation will ease the convergence of the PG algorithm. If we sample $a_1$, the gradient signal will be negative on average and reduce the probability of choosing $a_1$, and if we chose $a_2$ the gradient will be positive on average, making $a_2$ more likely to be chosen.</p>
@@ -13413,7 +13426,7 @@ Most commonly, we'll use an ANN parametrized by $\phi$ as our function approxima
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Actor-Critic-Algorithm">Actor-Critic Algorithm<a class="anchor-link" href="#Actor-Critic-Algorithm">&#182;</a></h3><p>The Actor-Critic algorithm is the TD version of Policy Gradient. It is called actor-critic because it uses two networks, a policy network (the actor) is used for action selection, and a state-value network (the critic) that is used to evaluate the goodness or the outcome of the selected actions. This sounds similar to the REINFORCE with baseline, right? Like REINFORCE with baseline, it uses a network that evaluates the state-value $\hat{V}_\phi^\pi(s)$. Unlike REINFORCE with baseline, this state-value estimate is not just a baseline. It is used to bootstrap. So, what does it mean to bootstrap? In REINFORCE we sampled the full trajectory and used the actual trajectory's rewards as our value. For the case of using all the variance reduction methods described in the previous sections, our reward function $G_{i, t}$ is the advantage:</p>
+<h2 id="Actor-Critic-Algorithm-">Actor-Critic Algorithm <a class="anchor" id="bullet_5" /><a class="anchor-link" href="#Actor-Critic-Algorithm-">&#182;</a></h2><p>The Actor-Critic algorithm is the TD version of Policy Gradient. It is called actor-critic because it uses two networks, a policy network (the actor) is used for action selection, and a state-value network (the critic) that is used to evaluate the goodness or the outcome of the selected actions. This sounds similar to the REINFORCE with baseline, right? Like REINFORCE with baseline, it uses a network that evaluates the state-value $\hat{V}_\phi^\pi(s)$. Unlike REINFORCE with baseline, this state-value estimate is not just a baseline. It is used to bootstrap. So, what does it mean to bootstrap? In REINFORCE we sampled the full trajectory and used the actual trajectory's rewards as our value. For the case of using all the variance reduction methods described in the previous sections, our reward function $G_{i, t}$ is the advantage:</p>
 <p>$A(s_t, a_t) = (\sum_{t'=t}^{T-1} \gamma^{t'-t} r(s_{t'}, a_{t'})) - \hat{V}_\phi^\pi(s_t)$</p>
 <p>With bootstrapping, we are using an approximation of successor states values instead of sampling the full trajectory. This means that with actor-critic we don't need to wait until the episode ends in order to update the policy network, and that we can apply PG to continuing tasks. I will present the 1-step or online version of actor-critic, but it can be trivially extended to any desired n-step version. In the online version, at each timestep $t$ when being at state $s_t$ we apply an action $a_t$ that was sampled from the policy. We then observe the reward $r_{t+1}$ and a new state $s_{t+1}$ returned from the environment.
 The advantage function for the online actor-critic is the following:</p>
@@ -13428,7 +13441,7 @@ The advantage function for the online actor-critic is the following:</p>
 <li>In many cases the state space is too large that even if someone told us the true state-value we wouldn't have the capacity to store a unique value for each possible state. In these cases we are actually using an aggregation of states or observations.</li>
 </ul>
 <p>And therefore, unlike REINFORCE, the advantage estimation is biased.</p>
-<p>Now you probably expect me to say that on the other hand, actor-critic improves the variance... Well, if we are to use the online version described above, we'll be updating the gradient-based on a single environment interaction and that will be a very noisy signal (high variance). We prefer to use batches, and this can be achieved with the Asynchronous Advantage Actor-Critic (A3C) algorithm, which I'm not going to dive deep into here. In a nutshell, it runs multiple agents in parallel and synchronized their gradient signals which reduce the variance.</p>
+<p>Now you probably expect me to say that on the other hand, actor-critic improves the variance... Well, if we are to use the online version described above, we'll be updating the gradient-based on a single environment interaction and that will be a very noisy signal (high variance). We prefer to use batches, and this can be achieved with the Asynchronous Advantage Actor-Critic (<a href="https://arxiv.org/pdf/1602.01783.pdf">A3C</a>) algorithm, which I'm not going to dive deep into here. In a nutshell, it runs multiple agents in parallel and synchronized their gradient signals which reduce the variance.</p>
 
 </div>
 </div>
@@ -13436,7 +13449,7 @@ The advantage function for the online actor-critic is the following:</p>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Advantages-of-Policy-Gradient-over-action-value-methods">Advantages of Policy Gradient over action-value methods<a class="anchor-link" href="#Advantages-of-Policy-Gradient-over-action-value-methods">&#182;</a></h2><p>This is a summary of the advantages of Policy Gradient over action-value given in Sutton and Barto <a href="http://incompleteideas.net/book/bookdraft2017nov5.pdf">book</a> chapter 13.</p>
+<h2 id="Advantages-of-Policy-Gradient-over-action-value-methods-">Advantages of Policy Gradient over action-value methods <a class="anchor" id="bullet_6" /><a class="anchor-link" href="#Advantages-of-Policy-Gradient-over-action-value-methods-">&#182;</a></h2><p>This is a summary of the advantages of Policy Gradient over action-value given in Sutton and Barto <a href="http://incompleteideas.net/book/bookdraft2017nov5.pdf">book</a> chapter 13.</p>
 <ol>
 <li>Allows deterministic policies (discrete action space):<br>
 The deterministic policy is naturally achieved by a PG method. In case a certain action dominants others, the logit value for this action will be pushed infinitely high, causing this action's softmax value to reach a probability of 1 in the limit. On the contrary, for action-values with an e-greedy policy, there is always an epsilon probability of choosing a random action. Trying to achieve exploration by defining a softmax over the action-values also won't allow convergence to a deterministic policy. This is because the action-values will converge to their true values, which have a finite difference, and therefore all actions will have a non-zero probability. </li>
@@ -13455,7 +13468,7 @@ The choice of policy parametrization can be a good way of injecting prior knowle
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Summary">Summary<a class="anchor-link" href="#Summary">&#182;</a></h2><p>This was an introductory blog post that went over the basic Policy Gradient methods like REINFORCE with/without variance reduction and Actor-Critic. I hope you enjoyed it - I would be pleased to recieve feedback and/or answer any of your questions.</p>
+<h2 id="Summary-">Summary <a class="anchor" id="bullet_7" /><a class="anchor-link" href="#Summary-">&#182;</a></h2><p>This was an introductory blog post that went over the basic Policy Gradient methods like REINFORCE with/without variance reduction and Actor-Critic. I hope you enjoyed it - I would be pleased to recieve feedback and/or answer any of your questions.</p>
 <p>In the next blog post, we'll write some Tensorflow code for both the discrete and continues action spaces (similar to the reparametrization trick used in VAE). We'll also dive into some more sophisticated PG methods that try to restrict the change in policy in comparison to our current policies like Trust Region Policy Optimization (<a href="https://arxiv.org/abs/1502.05477">TRPO</a>) and Proximal Policy Optimization (<a href="https://arxiv.org/abs/1707.06347">PPO</a>).</p>
 <h4 id="Implementation-warning">Implementation warning<a class="anchor-link" href="#Implementation-warning">&#182;</a></h4><p>Note that when using a value network (in REINFORCE with baseline and actor-critic), it should be trained separately from the policy network. When training the policy network with an automatic differentiation software (e.g. Tensorflow), we need to be careful not to also generate gradients for the value network that is part of the advantage function.
 In Tensorflow for example, this can be achieved by first computing the reward function for each timestep $G_{i,t}$ in numpy and then inserting the resulting numpy array as input to the model with tf.placeholder (using feed_dict).</p>
