@@ -13084,7 +13084,7 @@ div#notebook {
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>RL Policy Gradient (PG) methods are model-free methods that try to maximize the RL objective directly without requiring a value function. Although a value function can be used as a baseline for variance reduction, or in order to evaluate current and successor state's value (Actor-Critic), it is not required for the purpose of action selection. The RL objective or the performance measure $J(\theta)$ is defined as the sum of rewards from the initial state to a terminal state for the episodic task, and the average return for the continuing task. We are trying to fit an ANN parametrized by $\theta$ to learn a stochastic policy $\pi_{\theta}(a|s_t)$, a probability distribution mapping from state to actions, that will maximize $J(\theta)$.</p>
-<p>In this blog post I will start with a review of PG methods for model-free RL, followed by a recap of some relevant RL concepts. I will then discuss the different types of PG algorithms (REINFORCE with/without a baseline, Actor-Critic) and some variance reduction methods ("reward to go" and advantage). Finally, I will summarize the advantages of PG methods over the state and state-action value methods. If you are not familiar with the concept of the cross-entropy loss for a supervised learning classification task or just need a refresh , I suggest reading my previous blog post <a href="http://machinelearningmechanic.com/deep_learning/2019/09/04/cross-entropy-loss-derivative.html">cross entropy loss derivative</a> before continuing.</p>
+<p>In this blog post I will start with a review of PG methods for model-free RL, followed by a recap of some relevant RL concepts. I will then discuss the different types of PG algorithms (REINFORCE with/without a baseline, Actor-Critic) and some variance reduction methods ("reward to go" and advantage). Finally, I will summarize the advantages of PG methods over the state and state-action value methods. If you are not familiar with the concept of the cross-entropy loss for a supervised learning classification task or just need a refresh, I suggest reading my previous blog post <a href="http://machinelearningmechanic.com/deep_learning/2019/09/04/cross-entropy-loss-derivative.html">cross entropy loss derivative</a> before continuing.</p>
 
 </div>
 </div>
@@ -13120,29 +13120,30 @@ div#notebook {
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h2 id="Relevant-RL-concepts-">Relevant RL concepts <a class="anchor" id="bullet_1" /><a class="anchor-link" href="#Relevant-RL-concepts-">&#182;</a></h2><ul>
-<li><strong>Policy</strong>: a mapping from states to action probabilities. Following a policy $\pi$ means that at each timestep $t$ when beeing at state $s_t$ we select an action $a$ with probability $\pi(a|s_t)$. The notation $\pi^*$ represents the optimal policy for a task, which is the policy that yields the highest expected reward.</li>
+<li><strong>Policy</strong>: a mapping from states to action probabilities. Following a policy $\pi$ means that at each timestep $t$ when beeing at state $s_t$ we select an action $a_t$ with probability $\pi(a_t|s_t)$. The notation $\pi^*$ represents the optimal policy for a task, which is the policy that yields the highest expected reward.</li>
+<li><strong>Experience</strong>: a record of all the interactions the agent had with the environment. RL methods try to improve a policy based on the agent's experience.</li>
 <li><strong>Value function</strong>: a function that estimates the expected future reward.</li>
-<li><strong>State-Value ($V$) function</strong>: $\hat{v}_\pi(s)$ is a value function that estimates $v_\pi(s)$, the expected reward starting at a state $s$ and following policy $\pi$ onwards. The notation $v_{\pi^*}(s)$ represent the true state-value for the optimal policy $\pi^*$. </li>
-<li><strong>State-Action Value ($Q$) function</strong>: $\hat{q}_\pi(s, a)$ is a value function that estimates $q_\pi(s, a)$, the expected reward of applying action $a$ at state $s$ and following policy $\pi$ onwards. The notation $q_{\pi^*}(s, a)$ represent the true state-action value for the optimal policy $\pi^*$.</li>
+<li><strong>State-Value ($V$) function</strong>: $\hat{v}_\pi(s)$ is a value function that estimates $v_\pi(s)$, the expected reward starting at a state $s$ and following policy $\pi$ onwards. The notation $v_{\pi^*}(s)$ represents the true state-value for the optimal policy $\pi^*$. </li>
+<li><strong>State-Action Value ($Q$) function</strong>: $\hat{q}_\pi(s, a)$ is a value function that estimates $q_\pi(s, a)$, the expected reward of applying action $a$ at state $s$ and following policy $\pi$ onwards. The notation $q_{\pi^*}(s, a)$ represents the true state-action value for the optimal policy $\pi^*$.</li>
 <li><strong>State-Value</strong> and <strong>State-Action value methods</strong>: methods that try to estimate the State and State-Action Value functions respectively.</li>
-<li><strong>Greedy policy</strong>: Greedy policy is a policy that fully exploits the current value estimation, meaning it selects the action with the maximal estimated value. If there are multiple actions that have the same maximum value, it chooses an action arbitrarily.</li>
-<li>$\epsilon$<strong>-greedy policy</strong>: $\epsilon$-greedy policy is a policy that tries to balance between exploration and exploitation, it chooses a greedy action with probability $1-\epsilon$ and a random action with probability $\epsilon$. It is common to start with a large $\epsilon$ value and decrease it during the learning process.</li>
+<li><strong>Greedy policy</strong>: a policy that fully exploits the current state/state-action value estimation. This means it always selects the action with the maximal estimated value and never explores new actions. If there are multiple actions that have the same maximum value, it chooses an action arbitrarily.</li>
+<li>$\epsilon$<strong>-greedy policy</strong>: a policy that tries to balance between exploration and exploitation. It chooses a greedy action with probability $1-\epsilon$ and a random action with probability $\epsilon$. It is common to start with a large $\epsilon$ value and decrease it during the learning process.</li>
 <li><strong>Episodic Task</strong>: an RL task with terminal states, for which the experience is separated into independent sequences (episodes) of state-reward pairs. All episodes will eventually end in a terminal state regardless of the actions selected.</li>
 <li><strong>Continuing Task</strong>: an RL infinite horizon task that continues indefinitely with no terminal states.</li>
-<li><strong>Trajectory</strong> - A trajectory $\tau$ is a sequence of continuous timestep state-reward pairs from a single episode. In episodic tasks, this term sometimes describes the full path from the initial state to a terminal state. In other cases, the explicit term Full/Complete trajectory is used.</li>
-<li><strong>Discount rate</strong>: Receiving rewards sooner is better than later. A concept that is essential for an infinite horizon (continuing) task because an infinite sum of finite rewards can be infinite, but can also be applied to episodic tasks. A discount rate $0 \ge \gamma \ge 1$ is a parameter that is used to calculate the present value of future rewards. A reward received $k$ steps in the future is worth $\gamma^{k-1}$ at the current time step. On the extremes, when $\gamma=1$ there is no discounting, and $\gamma=0$ means the agent only cares about immediate rewards.</li>
-<li><strong>Bootstrapping</strong>: A method that updates an estimate for a given value function at a given state based on value estimates of successor states. Dynamic Programming (DP), Temporal-Difference (TD) and Actor-Critic methods use Bootstrapping.</li>
+<li><strong>Trajectory $\tau$</strong> - a sequence of continuous timestep state-reward pairs from a single episode. In episodic tasks, this term sometimes describes the full path from the initial state to a terminal state. In other cases, the explicit term Full/Complete trajectory is used.</li>
+<li><strong>Discount rate</strong>: receiving rewards sooner is better than later. A concept that is essential for an infinite horizon (continuing) task because an infinite sum of finite rewards can be infinite, but can also be applied to episodic tasks. A discount rate $0 \le \gamma \le 1$ is a parameter that is used to calculate the present value of future rewards. A reward that is received $k$ steps in the future is worth $\gamma^{k-1}$ at the current time step. On the extremes, when $\gamma=1$ there is no discounting, and $\gamma=0$ means the agent only cares about immediate rewards.</li>
+<li><strong>Bootstrapping</strong>: a method that updates an estimate for a given value function at a given state based on value estimates of successor states. Dynamic Programming (DP), Temporal-Difference (TD) and Actor-Critic methods use Bootstrapping.</li>
 <li><strong>Environment Dynamics</strong> - In RL we assume that the environment has a transition distribution $p(s_{t+1}|s_t, a_t)$ (a.k.a transition function or transition dynamics) that defines the probability to arrive at state $s_{t+1}$ at time $t+1$ after being at state $s_t$ at time $t$ and applying action $a_t$. We also assume that the environment also has a reward distribution $R(r_{t+1}|s_t, a_t)$ that defines the probability of receiving reward $r_{t+1}$ when applying action $a_t$ at state $s_t$. These two distributions are usually unknown to us, but we are able to sample from them by interacting with (sampling from) the environment.</li>
-<li><strong>Sampling Methods</strong> - Often it is easy to generate experience sampled from the desired probability distribution but is infeasible to obtain the explicit form of that distribution. Sampling methods do not require a perfect probabilistic model of the environment, they interact with it and create samples of temporal state transitions and rewards.</li>
+<li><strong>Sampling Methods</strong> - often it is easy to generate experience sampled from the desired probability distribution but it is infeasible to obtain the explicit form of that distribution. Sampling methods do not require a perfect probabilistic model of the environment, they interact with it and create samples of temporal state transitions and rewards.</li>
 <li><strong>Dynamic Programming (DP)</strong> a collection of algorithms that computes the optimal policy given a perfect probabilistic model of the environment (state transition, reward probabilities, and termination) as a Markov decision process (MDP). DP methods use bootstrapping but don't use sampling. </li>
-<li><strong>Monte Carlo (MC)</strong>: A sampling method that is defined for episodic tasks. It updates the state/state-action value estimates only when an episode is complete (an exception is the use eligibility traces, for which MC methods can also be applied to continuing tasks and values updates happen online). MC methods are not biased because they actually sample a complete trajectory instead of using a biased value estimate of successor states (they don't bootstrap). Because of the nature of sampling multiple random variables and only updating at the end of the episode, MC methods usually have higher variance compared to methods that update on a step-to-step or n-step basis (e.g. TD methods).</li>
-<li><strong>Temporal Difference (TD) learning</strong>: TD methods combine both MC and DP methods and they are suitable for online step by step learning. Like MC methods they learn by sampling experience directly from the environment and do not require the full model of the environment dynamics, and like DP methods they use successor state value estimates (bootstrap) in order to estimate the current state’s state/state-action value estimate. TD methods can be calculated for more than a one-step (n-step target) and also be united with Monte Carlo methods (TD($\lambda$)).</li>
-<li><strong>Tabular methods</strong>: Refers to the use of state-value and State-Action value methods when the state and action spaces are small enough to fit in a table. Tabular methods have no generalization, each state/state-action has its unique value in the table.</li>
-<li><strong>Function Approximation for action/action-value methods</strong>: Methods that can be applied to tasks with arbitrarily large state spaces, for which there is not enough memory for state/state-action tables, or that these tables cannot be filled optimally even in the limit of infinite amounts of time and data. For example, an autonomous car camera will never capture the exact same image but will usually encounter images of scenarios it can generalize (e.g. "a single pedestrian walking on the zebra crossing"). For these tasks, an optimal solution cannot be obtained and generalization and finding a good approximated solution with limited compute resources is the goal. Function approximation in RL is related to Supervised Learning, but it also deals with some unique issues such as nonstationarity, bootstrapping, and delayed targets. Although in theory all supervised learning methods can be applied to RL tasks, in practice we will usually use a linear function approximator or artificial neural network (ANN).</li>
-<li><strong>Markov Property</strong>:  A Markov property of a stochastic process is a property of the conditional probability distribution of arrival at future states only depends on the current state and not the past. Meaning that given the current state, the history/path of arriving to it is a redundant information that does not affect the transition distribution: $P(s_t | s_0, s_1,...s_{t-1})=P(s_t | s_{t-1})$.  A Markov chain satisfies the Markov property.</li>
-<li><strong>Stationary Distributions</strong>: The definition of <a href="https://brilliant.org/wiki/stationary-distributions/">Stationary Distributions</a> comes from Markov Chains and it refers to a probability distribution over the state space of being in a specific state after enough timestamps since starting at the initial state. Stationary Distributions are defined for Ergodic and Absorbing Markov chains. </li>
-<li><strong>Ergodic Markov Chains</strong>: Ergodic Markov chains contain only recurrent states (a state you are guaranteed to return too) and unique stationary distribution. In the context of RL, they represent a continuing task for which all states will be revisited with non-zero probability and a reward distribution for each state that won't vary with time.</li>
-<li><strong>Absorbing Markov Chains</strong>: Absorbing Markov Chains have absorbing states which are states that are impossible to leave. Any path from any given state will eventually reach an absorbing state with non-zero probability. This is the reason that for these types of Markov chains the stationary distributions are non-zero only for absorbing states. In the RL context, episodic task's terminal states can be viewed as absorbing states with infinite zero rewards regardless of the actions chosen.</li>
+<li><strong>Monte Carlo (MC)</strong>: a sampling method that is defined for episodic tasks. It updates the state/state-action value estimates only when an episode is complete (an exception is the use eligibility traces, for which MC methods can also be applied to continuing tasks and values updates happen online). MC methods are not biased because they actually sample a complete trajectory instead of using a biased value estimate of successor states (they don't bootstrap). Because of the nature of sampling multiple random variables and only updating at the end of the episode, MC methods usually have higher variance compared to methods that update on a step-to-step or n-step basis (e.g. TD methods).</li>
+<li><strong>Temporal Difference (TD) learning</strong>: combine both MC and DP methods and they are suitable for online step by step learning. Like MC methods they learn by sampling experience directly from the environment and do not require the full model of the environment dynamics, and like DP methods they use successor state value estimates (bootstrap) in order to estimate the current state’s state/state-action value estimate. TD methods can be calculated for more than a one-step (n-step target) and also be united with Monte Carlo methods (TD($\lambda$)).</li>
+<li><strong>Tabular methods</strong>: refers to the use of state-value and State-Action value methods when the state and action spaces are small enough to fit in a table. Tabular methods have no generalization, each state/state-action has its unique value in the table.</li>
+<li><strong>Function Approximation for action/action-value methods</strong>: methods that can be applied to tasks with arbitrarily large state spaces, for which there is not enough memory for state/state-action tables, or that these tables cannot be filled optimally even in the limit of infinite amounts of time and data. For example, an autonomous car camera will never capture the exact same image but will usually encounter images of scenarios it can generalize (e.g. "a single pedestrian walking on the zebra crossing"). For these tasks, an optimal solution cannot be obtained and generalization and finding a good approximated solution with limited compute resources is the goal. Function approximation in RL is related to Supervised Learning, but it also deals with some unique issues such as nonstationarity, bootstrapping, and delayed targets. Although in theory all supervised learning methods can be applied to RL tasks, in practice we will usually use a linear function approximator or artificial neural network (ANN).</li>
+<li><strong>Markov Property</strong>:  a Markov property of a stochastic process is a property of the conditional probability distribution of arrival at future states only depends on the current state and not the past. Meaning that given the current state, the history/path of arriving to it is a redundant information that does not affect the transition distribution: $P(s_t | s_0, s_1,...s_{t-1})=P(s_t | s_{t-1})$.  A Markov chain satisfies the Markov property.</li>
+<li><strong>Stationary Distributions</strong>: the definition of <a href="https://brilliant.org/wiki/stationary-distributions/">Stationary Distributions</a> comes from Markov Chains and it refers to a probability distribution over the state space of being in a specific state after enough timestamps since starting at the initial state. Stationary Distributions are defined for Ergodic and Absorbing Markov chains. </li>
+<li><strong>Ergodic Markov Chains</strong>: contain only recurrent states (a state you are guaranteed to return too) and unique stationary distribution. In the context of RL, they represent a continuing task for which all states will be revisited with non-zero probability and a reward distribution for each state that won't vary with time.</li>
+<li><strong>Absorbing Markov Chains</strong>: have absorbing states which are states that are impossible to leave. Any path from any given state will eventually reach an absorbing state with non-zero probability. This is the reason that for these types of Markov chains the stationary distributions are non-zero only for absorbing states. In the RL context, episodic task's terminal states can be viewed as absorbing states with infinite zero rewards regardless of the actions chosen.</li>
 <li><strong>Nonstationarity in the context of RL</strong>: RL mainly deals with nonstationary target functions (target functions that change over time) either because the task in itself is nonstationary (e.g. reward probabilities that vary with time), or it is effectively nonstationary (e.g. target policies that change during training, or using bootstrapping with successor state reward estimates that haven't converged yet). This nonstationary nature of targets in reinforcement methods requires function approximation methods that can handle it.</li>
 </ul>
 
@@ -13155,11 +13156,22 @@ div#notebook {
 <h2 id="Policy-Gradient-methods-VS-Supervised-Learning-">Policy Gradient methods VS Supervised Learning <a class="anchor" id="bullet_2" /><a class="anchor-link" href="#Policy-Gradient-methods-VS-Supervised-Learning-">&#182;</a></h2><p>PG methods are similar to DL methods for supervised learning problems in the sense that they both try to fit a neural network to approximate some function by learning an approximation of its gradient using a Stochastic Gradient Descent (SGD) method and then using this gradient to update the network parameters.
 There are also some key differences in PG methods:</p>
 <ul>
-<li>There are no static targets labeled by an expert. The reward signal is used as a way of measuring the "goodness" of the performance. </li>
+<li>There are no static targets labeled by an expert to be used in training. The reward signal is used as a way of measuring the "goodness" of the performance. </li>
 <li>They are harder to fine-tune and take longer to converge compared to supervised learning problems such as image classification tasks.</li>
 <li>Unlike supervised learning problems in which we are trying to minimize a loss function, here our goal is to maximize the performance so we will update the parameters $\theta$ with the direction of the gradient (gradient ascent). </li>
 </ul>
 
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<figure style="text-align: center;">
+  <img src="/assets/images/pg/sl_vs_pg.png" alt="Policy Network" style="width:1000px;"/>
+  <figcaption style="text-align: left; font-style: italic;">Figure 1: A comparison between an Image Classification task and a Policy Gradient network used to play Atari games. In the classification example, we are given an image and a true label "dog" for the object in the image. Our task is to predict a probability distribution over $k=3$ classes and the objective is to minimize a loss function or maximize the log-likelihood of the "dog" class. In the Policy Gradient example, we are given an image or a sequence of images from sequential timeframes (in order to understand the speed/direction of objects in the game) and we are trying to predict a discrete probability of over $k=3$ possible actions ("left", "right", "down"). Our objective is to maximize the reward, in this case, the game's score, but unfortunately there is no labeled target or an expert that tells us how to play. We need to monitor the reward signal and attribute good rewards to our actions. In addition, the reward signal can be very sparse and can happen many timesteps after the action was applied (e.g. a Chess game) which makes the training process even more challenging.
+    </figcaption>
+</figure>
 </div>
 </div>
 </div>
@@ -13198,17 +13210,12 @@ There are also some key differences in PG methods:</p>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>We are trying to fit an ANN parametrized by $\theta$ to learn a stochastic policy $\pi_{\theta}(a|s)$, a probability distribution mapping from state to actions, that will maximize $J(\theta)$. Figure 1 shows an example of such a policy network.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><img src="/assets/images/pg/pg_policy_ann.jpg" alt="Policy Network" style="width:800px;"/></p>
-<p><em>Figure 1: An example of a basic policy network $\pi$ parameterized by $\theta$ ($\theta$ represents the weights of the network). This network gets a state $s\in R^3$ as input and maps it to a probability distribution over actions $a\in R^5$.</em></p>
-
+<p>We are trying to fit an ANN parametrized by $\theta$ to learn a stochastic policy $\pi_{\theta}(a|s)$, a probability distribution mapping from state to actions, that will maximize $J(\theta)$. Figure 2 shows an example of such a policy network.</p>
+<figure style="padding: 30px; text-align: center;">
+  <img src="/assets/images/pg/pg_policy_ann.jpg" alt="Policy Network" style="width:800px;"/>
+  <figcaption style="text-align: left; font-style: italic;">Figure 2: An example of a basic policy network $\pi$ parameterized by $\theta$ ($\theta$ represents the weights of the network). This network gets a state $s\in R^3$ as input and maps it to a probability distribution over actions $a\in R^5$.
+    </figcaption>
+</figure>
 </div>
 </div>
 </div>
@@ -13227,12 +13234,37 @@ There are also some key differences in PG methods:</p>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
+<figure style="text-align: center;">
+  <img src="/assets/images/pg/action_from_policy_cs285.png" alt="Policy Network" style="width:800px;"/>
+  <figcaption style="text-align: left; font-style: italic;">Figure 3: An example of a policy network for Autonomous Driving. If the policy $\pi_{\theta}(a|s)$ is discrete, a possible set of actions could be ("left", "right"). For a continuous action space, the network output is a continuous value like the degree in which to turn the steering wheel. (This image was taken from UC Berkeley's CS285 lecture slides)
+    </figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
 <h3 id="Gradient-">Gradient <a class="anchor" id="bullet_3.4" /><a class="anchor-link" href="#Gradient-">&#182;</a></h3><p>The gradient with respect to $\theta$ according to the Policy Gradient Theorem can be approximated over N trajectories as:</p>
 <p>$\nabla_{\theta} J(\theta) \approx \frac{1}{N}\sum_{i=1}^{N}\left( \sum_{t=0}^{T_{i}-1} G_{i,t} \nabla_{\theta} log \pi_{\theta}(a_{i,t}|s_{i,t}) \right)$</p>
 <p>where $a_{i,t}$ is the <strong>action taken</strong> at time $t$ of episode $i$ at state $s_{i,t}$, $T_{i}$ is the timestep in which trajectory $\tau_{i}$ terminates and $G_{i,t}$ is a function of the reward assigned to this action. In vanilla PG settings (REINFORCE algorithm) $G_{i,t}$ is just trajectory $i$'s sum of rewards:</p>
 <p>$G_{i,t} = \sum_{t'=0}^{T_{i}-1} r(s_{i,t'}, a_{i, t'})$</p>
 <p>Later, when we discuss variance reduction methods like "reward to go" and Advantage, we'll use a more sophisticated function for $G_{i,t}$.</p>
 
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<figure style="padding: 30px; text-align: center;">
+  <img src="/assets/images/pg/trajectory-vertical.png" alt="Policy Network" style="width:800px;"/>
+  <figcaption style="text-align: left; font-style: italic;">
+      Figure 4: An example of a reward function calculation on a given backup diagram of a full trajectory $\tau_0$ of an episode of length $3$. In a backup diagram, an open circle represents a state, a solid black circle represents an action, the observed reward is written above the edge that connects an action to the next state and the solid grey square is a terminal state. Starting at the initial state $s_0$ we apply action $a_1$, observe a reward $r_1=1$ and arrive at state $s_1$. This process of applying an action, observing a reward and arriving at a new state continues until we arrive at a terminal state $s_3$ and the episode ends. In the vanilla PG settings the reward function has the same value for all $3$ non-terminal states:
+
+$G_{0,0} = G_{0,1} = G_{0,2} = \sum_{t'=0}^{T_{i}-1} r(s_{0,t'}, a_{0, t'}) = r_1 + r_2 + r_3 = 1 + 3 + 5 = 9$
+    </figcaption>
+</figure>
 </div>
 </div>
 </div>
@@ -13275,11 +13307,14 @@ $$
                q_{y_i} - 1 \hspace{10pt} if \hspace{10pt} j=y_i\\
                q_j \hspace{10pt} \forall j\neq y_i\\
             \end{cases}
-$$<p>where each $q_j$ represent the model approximation of the probability $p(y=j|X_i)$. Note that the gradient for the true label's logit is non-positive (as expected) and decreases proportionally in magnitude as $q_{y_i}$ increases. The rest of the logits gradients ($q_j \hspace{5pt} \forall j\neq y_i$) will be non-negative and increase proportionally as $q_j$ increases. In the specific case of perfect classification where $q_{y_i}=1$, the gradient will be $\vec{0}$ and thus none of the network's parameters will be modified. Figure 2 below shows the forward and backward passes of backpropagation of a single training example when $k=3$.</p>
-<p><img src="/assets/images/pg/back_propagation_single_label.jpg" alt="Policy Network" style="width:600px;"/></p>
-<p><em>Figure 2: This example shows the end layers of a basic classifier for a classification task with $k=3$ when classifying a single sample with label $y=1$.
-The top image demonstrates the forward pass of the backpropagation in which the softmax outputs a probability distribution $(q_1, q_2, q_3)$ over the 3 classes. The bottom image demonstrates the backward pass of backpropagation in which the gradients out of the softmax are shown. Note that this gradient is different for the true label ($y=1$) than the rest of the labels.</em></p>
-<p>The cross-entropy loss function for the classification task with a single training example is $-log(q_{y_i})$. Increasing the probability of the true label's class $q_{y_i}$ will decrease the loss, and increasing the probability of each of the incorrect classes will increase the loss.
+$$<p>where each $q_j$ represent the model approximation of the probability $p(y=j|X_i)$. Note that the gradient for the true label's logit is non-positive (as expected) and decreases proportionally in magnitude as $q_{y_i}$ increases. The rest of the logits gradients ($q_j \hspace{5pt} \forall j\neq y_i$) will be non-negative and increase proportionally as $q_j$ increases. In the specific case of perfect classification where $q_{y_i}=1$, the gradient will be $\vec{0}$ and thus none of the network's parameters will be modified. Figure 5 shows the forward and backward passes of backpropagation of a single training example when $k=3$.</p>
+<figure style="text-align: center;">
+    <img src="/assets/images/pg/back_propagation_single_label.jpg" alt="Policy Network" style="width:600px;"/>
+    <figcaption style="text-align: left; font-style: italic;">
+      Figure 5: This example shows the end layers of a basic classifier for a classification task with $k=3$ when classifying a single sample with label $y=1$.
+The top image demonstrates the forward pass of the backpropagation in which the softmax outputs a probability distribution $(q_1, q_2, q_3)$ over the 3 classes. The bottom image demonstrates the backward pass of backpropagation in which the gradients out of the softmax are shown. Note that this gradient is different for the true label ($y=1$) than the rest of the labels.
+    </figcaption>
+</figure><p>The cross-entropy loss function for the classification task with a single training example is $-log(q_{y_i})$. Increasing the probability of the true label's class $q_{y_i}$ will decrease the loss, and increasing the probability of each of the incorrect classes will increase the loss.
 Because gradients are directed towards the maximal value increase of their function, when running gradient descent we will update the network parameters in the counter direction to the gradient in order to minimize the loss.
 As a result, the network will try to move all the probability mass towards the correct class, which will reduce the current training loss, and (hopefully) generalize and improve the classification of new unseen inputs.</p>
 
@@ -13340,7 +13375,14 @@ The policy at time $t$ cannot effect the rewards we get until time $t$ and there
 <p>$G_{i,t} = \sum_{t'=t}^{T_{i}-1} r(s_{i,t'}, a_{i, t'})$</p>
 <p>And the corresponding gradient estimate is:</p>
 <p>$\nabla_{\theta} J(\theta) \approx \frac{1}{N}\sum_{i=1}^{N} \sum_{t=0}^{T_{i}-1} \nabla_{\theta} log \pi_{\theta}(a_{i,t}|s_{i,t}) * \left( \sum_{t'=t}^{T_{i}-1} r(s_{i,t'}, a_{i, t'}) \right)$</p>
-<p>Why does the "reward to go" reduce variance? The variance is reduced because we are summing up less random variables. It is not trivial to prove but I'll try to give some intuition for a specific case of independent rewards. If we assume that the rewards in a trajectory are independent of each other, then the variance of the sum of N random variables is equal to the sum of the individual variances:</p>
+<figure style="padding: 30px;">
+  <img src="/assets/images/pg/trajectory-vertical.png" alt="Policy Network" style="width:800px;"/>
+  <figcaption style="text-align: left; font-style: italic;">Figure 6: The calculation of the "reward to go" reward function for the same backup diagram presented earlier. In this case we get a different value for each of the states: <br />
+$G_{0,0} = r_1 + r_2 + r_3 = 1 + 3 + 5 = 9$ <br /> 
+$G_{0,1} = r_2 + r_3 = 3 + 5 = 8$  <br /> 
+$G_{0,2} = r_3 = 5$
+    </figcaption>
+</figure><p>Why does the "reward to go" reduce variance? The variance is reduced because we are summing up less random variables. It is not trivial to prove but I'll try to give some intuition for a specific case of independent rewards. If we assume that the rewards in a trajectory are independent of each other, then the variance of the sum of N random variables is equal to the sum of the individual variances:</p>
 <p>$Var(\sum_{i=1}^{N}r_i) = \sum_{i=1}^{N}Var(r_i)$</p>
 <p>Because the variance is a nonnegative function, this sum monotonically increases as N increases.</p>
 
@@ -13356,7 +13398,14 @@ Rewards in the far future are more likely to have high variance because in many 
 <p>$\nabla_{\theta} J(\theta) \approx \frac{1}{N}\sum_{i=1}^{N} \sum_{t=0}^{T_{i}-1} \nabla_{\theta} log \pi_{\theta}(a_{i,t}|s_{i,t}) * \left( \sum_{t'=0}^{T_{i}-1} \gamma^{t'} r(s_{i,t'}, a_{i, t'}) \right)$</p>
 <p>And with "reward to go":</p>
 <p>$\nabla_{\theta} J(\theta) \approx \frac{1}{N}\sum_{i=1}^{N} \sum_{t=0}^{T_{i}-1} \nabla_{\theta} log \pi_{\theta}(a_{i,t}|s_{i,t}) * \left( \sum_{t'=t}^{T_{i}-1} \gamma^{t'-t} r(s_{i,t'}, a_{i, t'}) \right)$</p>
-
+<figure style="padding: 30px;">
+  <img src="/assets/images/pg/trajectory-vertical.png" alt="Policy Network" style="width:800px;"/>
+  <figcaption>Figure 7: The calculation of the discounted "reward to go" reward function for a discount rate $\gamma=0.9$: <br />
+$G_{0,0} = \gamma^0r_1 + \gamma^1r_2 + \gamma^2r_3 = (0.9)^0 1 + (0.9)^1 3 + (0.9)^2 5 = 7.75$ <br /> 
+$G_{0,1} = \gamma^0r_2 + \gamma^1r_3 = (0.9)^0 3 + (0.9)^1 5 = 7.5$  <br /> 
+$G_{0,2} = \gamma^0r_3 = (0.9)^0 5 = 5$
+    </figcaption>
+</figure>
 </div>
 </div>
 </div>
@@ -13403,7 +13452,7 @@ Because the direction of the gradient is determined by the sum of rewards, any a
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h4 id="Baseline-network">Baseline network<a class="anchor-link" href="#Baseline-network">&#182;</a></h4><p>The use of a state-dependent baseline has no effect on the expected value of the gradient update, but it may reduce the variance significantly and speed up learning.
-Most commonly, we'll use an ANN parametrized by $\phi$ as our function approximator of the state-value function $\hat{V}_\phi^\pi(s)$. The notation represents the expected value of rewards starting at state $s$ and then following policy $\pi$. The state-value function $\hat{V}_\phi^\pi(s)$ can be approximated with a new separated network, but in some cases, sharing some of the network weights is very reasonable because the features extracted for the policy network are also required for evaluating the state-value. For example, in Atari games where the input is a sequence of images from sequential timeframes, identifying a gold coin or a monster can influence both policy and the current state's value. Figure 3 below demonstrates the two architecture options.</p>
+Most commonly, we'll use an ANN parametrized by $\phi$ as our function approximator of the state-value function $\hat{V}_\phi^\pi(s)$. The notation represents the expected value of rewards starting at state $s$ and then following policy $\pi$. The state-value function $\hat{V}_\phi^\pi(s)$ can be approximated with a new separated network, but in some cases, sharing some of the network weights is very reasonable because the features extracted for the policy network are also required for evaluating the state-value. For example, in Atari games where the input is a sequence of images from sequential timeframes, identifying a gold coin or a monster can influence both policy and the current state's value. Figure 8 below demonstrates the two architecture options.</p>
 <p><img src="/assets/images/pg/value_and_policy_anns.jpg" alt="Policy and Value Networks" style="width:800px;"/></p>
 <p>The value network's head is just a regression head with a single output (the state-value $\hat{V}_\phi^\pi(s)$). The loss function can be any regression loss (e.g. Mean Square Error) and the target is the actual sum of rewards or the "reward to go" for each specific timestep. For example, the state value’s gradient with MSE loss and "reward to go" targets can be estimated as:</p>
 <p>$\nabla_{\phi} Loss(\phi) \approx \frac{1}{2N} \sum_{i=1}^{N}  \sum_{t=0}^{T_{i}-1} \nabla_{\phi} \left( 
@@ -13449,7 +13498,7 @@ The advantage function for the online actor-critic is the following:</p>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Advantages-of-Policy-Gradient-over-action-value-methods-">Advantages of Policy Gradient over action-value methods <a class="anchor" id="bullet_6" /><a class="anchor-link" href="#Advantages-of-Policy-Gradient-over-action-value-methods-">&#182;</a></h2><p>This is a summary of the advantages of Policy Gradient over action-value given in Sutton and Barto <a href="http://incompleteideas.net/book/bookdraft2017nov5.pdf">book</a> chapter 13.</p>
+<h2 id="Advantages-of-Policy-Gradient-over-action-value-methods-">Advantages of Policy Gradient over action-value methods <a class="anchor" id="bullet_6" /><a class="anchor-link" href="#Advantages-of-Policy-Gradient-over-action-value-methods-">&#182;</a></h2><p>This is a summary of the advantages of Policy Gradient over action-value given in Sutton and Barto's <a href="http://incompleteideas.net/book/bookdraft2017nov5.pdf">book</a> chapter 13. It requires reader familiarity with state-value and action-value methods.</p>
 <ol>
 <li>Allows deterministic policies (discrete action space):<br>
 The deterministic policy is naturally achieved by a PG method. In case a certain action dominants others, the logit value for this action will be pushed infinitely high, causing this action's softmax value to reach a probability of 1 in the limit. On the contrary, for action-values with an e-greedy policy, there is always an epsilon probability of choosing a random action. Trying to achieve exploration by defining a softmax over the action-values also won't allow convergence to a deterministic policy. This is because the action-values will converge to their true values, which have a finite difference, and therefore all actions will have a non-zero probability. </li>
@@ -13459,7 +13508,7 @@ In some cases, the policy that yields the highest reward is stochastic - for exa
 Action probability of PG methods changes smoothly when using a continuous policy parametrization (e.g. an ANN model). This is an important theoretical advantage in comparison to the action-value policy, which is set implicitly by the learned action values. This implicit policy is not a smooth function because of the use of maximization to select between actions. A minor increase in a single action-value estimate can make this action's value estimation maximal and significantly increase the probability for that action to be chosen. This theoretical advantage is largely responsible for the stronger convergence guarantees available for PG methods over action-value methods. </li>
 <li>Injecting prior knowledge to policy parametrization<br>
 The choice of policy parametrization can be a good way of injecting prior knowledge of the desired form of the policy into the reinforcement learning system. This is often the most important reason for using a policy-based learning method.<br>
-"<em>The advantages of policy gradient methods for parameterized motor primitives are numerous. Among the most important ones are that the policy representation can be chosen such that it is meaningful for the task, i.e., we can use a suitable motor primitive representation, and that domain knowledge can be incorporated, which often leads to fewer parameters in the learning process in comparison to traditional value function based approaches."</em> <a href="http://www-clmc.usc.edu/publications/P/peters-NN2008.pdf">(Reinforcement learning of motor skills with policy gradients)</a></li>
+"<em>The advantages of policy gradient methods for parameterized motor primitives are numerous. Among the most important ones are that the policy representation can be hosen such that it is meaningful for the task, i.e., we can use a suitable motor primitive representation, and that domain knowledge can be incorporated, which often leads to fewer parameters in the learning process in comparison to traditional value function based approaches."</em> <a href="http://www-clmc.usc.edu/publications/P/peters-NN2008.pdf">(Reinforcement learning of motor skills with policy gradients)</a></li>
 </ol>
 
 </div>
